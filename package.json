@@ -1,14 +1,15 @@
 {
   "name": "kube-hint",
   "version": "1.0.0",
-  "description": "Find problems and suggest improvements to Kubernetes documents",
+  "description": "Find problems with, suggest improvements to, and summarize Kubernetes documents",
   "main": "index.js",
   "repository": "https://github.com:kubesail/kube-hint",
   "author": "erulabs <seandon.mooy@gmail.com>",
   "license": "MIT",
   "private": false,
   "scripts": {
-    "test": "./node_modules/.bin/mocha test/index.js"
+    "test": "./node_modules/.bin/mocha test/index.js",
+    "fetch-spec": ""
   },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
@@ -30,5 +31,9 @@
     "prettier": "^1.18.2",
     "prettier-eslint": "^9.0.0",
     "prettier-eslint-cli": "^5.0.0"
+  },
+  "dependencies": {
+    "cross-fetch": "^3.0.4",
+    "jsonschema": "^1.2.4"
   }
 }

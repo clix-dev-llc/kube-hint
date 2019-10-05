@@ -35,13 +35,16 @@ describe('KubeHint', () => {
     it('Lints a simple document', () => {
       const kubeHint = new KubeHint()
       const docs = loadTestDocs('simple')
-
       const results = kubeHint.lint(docs)
       expect(results).to.be.an('object')
       expect(Array.isArray(results.errors)).to.equal(true)
       expect(Array.isArray(results.warnings)).to.equal(true)
       expect(Array.isArray(results.suggestions)).to.equal(true)
       expect(Array.isArray(results.summary)).to.equal(true)
+      expect(results.errors.length, 'errors').to.equal(0)
+      expect(results.warnings.length, 'warnings').to.be.greaterThan(0)
+      expect(results.suggestions.length, 'suggestions').to.be.greaterThan(0)
+      expect(results.summary.length, 'summaries').to.be.greaterThan(0)
     })
   })
 })
