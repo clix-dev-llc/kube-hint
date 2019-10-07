@@ -6,12 +6,14 @@ const yaml = require('js-yaml')
 
 const { KubeHint, KubeHintResults } = require('../src/kube-hint')
 
-const expect = chai.expect
-const describe = global.describe
-const it = global.it
+const { expect } = chai
+const { describe } = global
+const { it } = global
 
 function loadTestDocs (name /*: string */) {
-  return yaml.safeLoadAll(fs.readFileSync(`./test/documents/${name}.yaml`, 'utf8'))
+  return yaml.safeLoadAll(
+    fs.readFileSync(`./test/documents/${name}.yaml`, 'utf8')
+  )
 }
 
 describe('KubeHint', () => {
@@ -37,14 +39,35 @@ describe('KubeHint', () => {
       const docs = loadTestDocs('simple')
       const results = kubeHint.lint(docs)
       expect(results, 'results').to.be.an('object')
-      expect(Array.isArray(results.errors), 'Array.isArray(results.errors)').to.equal(true)
-      expect(Array.isArray(results.warnings), 'Array.isArray(results.warnings)').to.equal(true)
-      expect(Array.isArray(results.suggestions), 'Array.isArray(results.suggestions)').to.equal(true)
-      expect(Array.isArray(results.summary), 'Array.isArray(results.summary)').to.equal(true)
+      expect(
+        Array.isArray(results.errors),
+        'Array.isArray(results.errors)'
+      ).to.equal(true)
+      expect(
+        Array.isArray(results.warnings),
+        'Array.isArray(results.warnings)'
+      ).to.equal(true)
+      expect(
+        Array.isArray(results.suggestions),
+        'Array.isArray(results.suggestions)'
+      ).to.equal(true)
+      expect(
+        Array.isArray(results.summary),
+        'Array.isArray(results.summary)'
+      ).to.equal(true)
       expect(results.errors.length, 'results.errors.length').to.equal(0)
-      expect(results.warnings.length, 'results.warnings.length').to.be.greaterThan(0)
-      expect(results.suggestions.length, 'results.suggestions.length').to.be.greaterThan(0)
-      expect(results.summary.length, 'results.summary.length').to.be.greaterThan(0)
+      expect(
+        results.warnings.length,
+        'results.warnings.length'
+      ).to.be.greaterThan(0)
+      expect(
+        results.suggestions.length,
+        'results.suggestions.length'
+      ).to.be.greaterThan(0)
+      expect(
+        results.summary.length,
+        'results.summary.length'
+      ).to.be.greaterThan(0)
     })
 
     it('Summary combines related documents (Deployment + PVC)', () => {

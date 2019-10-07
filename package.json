@@ -12,25 +12,19 @@
     "fetch-spec": ""
   },
   "devDependencies": {
-    "babel-eslint": "^10.0.3",
     "chai": "^4.2.0",
-    "eslint": "^5.16.0",
+    "eslint": "<6",
     "eslint-config-standard": "^14.1.0",
-    "eslint-loader": "^3.0.2",
     "eslint-plugin-flowtype": "^4.3.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^10.0.0",
-    "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-security": "^1.4.0",
     "eslint-plugin-standard": "^4.0.1",
     "flow-bin": "^0.109.0",
     "flow-typed": "^2.6.1",
     "js-yaml": "^3.13.1",
-    "mocha": "^6.2.1",
-    "prettier": "^1.18.2",
-    "prettier-eslint": "^9.0.0",
-    "prettier-eslint-cli": "^5.0.0"
+    "mocha": "^6.2.1"
   },
   "dependencies": {
     "cross-fetch": "^3.0.4",

@@ -1,10 +1,6 @@
 {
-  "parser": "babel-eslint",
-  "extends": [
-    "standard",
-    "plugin:flowtype/recommended",
-    "plugin:security/recommended"
-  ],
+  "extends": ["standard"],
+  "plugins": ["standard", "flowtype", "security"],
   "parserOptions": {
     "ecmaVersion": 7,
     "ecmaFeatures": {
@@ -28,11 +24,6 @@
     ],
     "standard/computed-property-even-spacing": 0,
     "camelcase": 0,
-    "object-curly-spacing": ["error", "always"],
-    "security/detect-object-injection": 0,
-    "security/detect-non-literal-fs-filename": 0,
-    "security/detect-unsafe-regex": 0,
-    "import/order": ["warn", { "groups": ["builtin", "external", "internal"] }]
-  },
-  "plugins": ["flowtype", "prettier", "security"]
+    "object-curly-spacing": ["error", "always"]
+  }
 }
