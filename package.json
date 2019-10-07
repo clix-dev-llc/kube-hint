@@ -8,8 +8,9 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "test": "./node_modules/.bin/mocha test/index.js",
-    "fetch-spec": ""
+    "fetch-spec": "bash bin/fetch-spec.sh",
+    "lint": "bash bin/lint.sh",
+    "test": "bash bin/test.sh"
   },
   "devDependencies": {
     "chai": "^4.2.0",
