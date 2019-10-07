@@ -87,7 +87,7 @@ class KubeHint {
     const { error } = results
 
     // Basic structure sanity check
-    if (!doc || typeof doc !== 'object') { error(null, 'Document is not an object!')} else if (!doc.apiVersion || typeof doc.apiVersion !== 'string') { error('apiVersion', 'apiVersion is invalid!')} else if (!doc.kind || typeof doc.kind !== 'string') { error('kind', 'kind is invalid!')}
+    if (!doc || typeof doc !== 'object') { error(null, 'Document is not an object!') } else if (!doc.apiVersion || typeof doc.apiVersion !== 'string') { error('apiVersion', 'apiVersion is invalid!') } else if (!doc.kind || typeof doc.kind !== 'string') { error('kind', 'kind is invalid!') }
     // Do not continue if any fatal errors above have occurred
     if (results.errors.length > 0) return results
 
@@ -100,11 +100,11 @@ class KubeHint {
       } else if (documentLinter.default) {
         documentLinter.default(doc, docNumber, results)
       }
-    } else
-    {
- process.stdout.write(
+    } else {
+      process.stdout.write(
         `-> Warning! No linter defined for ${doc.apiVersion}/${doc.kind}\n`
-    )}
+      )
+    }
 
     return results
   }
@@ -141,30 +141,30 @@ class KubeHint {
         const { suggest, error, warn, summarize } = results
         const kind = doc.kind.toLowerCase()
 
-        if (doc.spec.replicas < 2)
-        { 
-suggest(
-          docNumber,
-          'spec.replicas',
-          'One replica implies a single point of failure!'
-        )}
-        if (doc.spec.template.spec.containers.length < 1)
-        {
- error(
-          docNumber,
-          'spec.template.spec.containers.length',
-          'No containers in this Deployment?'
-        )}
+        if (doc.spec.replicas < 2) {
+          suggest(
+            docNumber,
+            'spec.replicas',
+            'One replica implies a single point of failure!'
+          )
+        }
+        if (doc.spec.template.spec.containers.length < 1) {
+          error(
+            docNumber,
+            'spec.template.spec.containers.length',
+            'No containers in this Deployment?'
+          )
+        }
 
         for (let i = 0; i < doc.spec.template.spec.containers.length; i++) {
           const container = doc.spec.template.spec.containers[i]
-          if (!container.resources)
-          { 
-warn(
-            docNumber,
+          if (!container.resources) {
+            warn(
+              docNumber,
               `spec.template.spec.containers[${i}]`,
               'No resource limits defined!'
-          )}
+            )
+          }
         }
 
         summarize(docNumber, {
