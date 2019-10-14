@@ -15,8 +15,6 @@ class KubeHintResults {
 
   suggestions /*: Array<Object> */ = [];
 
-  summary /*: Array<Object> */ = [];
-
   error = (
     docNumber /*: number */,
     key /*: string */,
@@ -39,10 +37,6 @@ class KubeHintResults {
     message /*: string */
   ) => {
     this.suggestions.push({ docNumber, key, message })
-  };
-
-  summarize = (docNumber /*: number */, data /*: Object */) => {
-    this.summary.push({ docNumber, ...data })
   };
 }
 
@@ -116,12 +110,7 @@ class KubeHint {
         docNumber /*: number */,
         results /*: KubeHintResults */
       ) => {
-        const kind = doc.kind.toLowerCase()
-        results.summarize(docNumber, {
-          kind,
-          name: doc.metadata.name,
-          namespace: doc.metadata.namespace
-        })
+        // const kind = doc.kind.toLowerCase()
         return results
       }
     },
@@ -138,7 +127,7 @@ class KubeHint {
         docNumber /*: number */,
         results /*: KubeHintResults */
       ) => {
-        const { suggest, error, warn, summarize } = results
+        const { suggest, error, warn } = results
         const kind = doc.kind.toLowerCase()
 
         if (doc.spec.replicas < 2) {
@@ -167,21 +156,74 @@ class KubeHint {
           }
         }
 
-        summarize(docNumber, {
-          kind,
-          name: doc.metadata.name,
-          namespace: doc.metadata.namespace,
-          message: `${doc.spec.replicas} ${
-            doc.spec.replicas > 1 ? 'replicas' : 'replica'
-          } of "${doc.spec.template.spec.containers
-            .map(c => c.image)
-            .join('", "')}"`
-        })
+        // summarize(docNumber, {
+        //   kind,
+        //   name: doc.metadata.name,
+        //   namespace: doc.metadata.namespace,
+        //   message: `${doc.spec.replicas} ${
+        //     doc.spec.replicas > 1 ? 'replicas' : 'replica'
+        //   } of "${doc.spec.template.spec.containers
+        //     .map(c => c.image)
+        //     .join('", "')}"`
+        // })
 
         return results
       }
     }
   };
+
+  summarizeDocuments (docs /*: Array<Object> */) {
+    // subjects: pods, replicasets, daemonsets, statefulsets, deployments, cronjobs, jobs
+    const summaries = []
+    docs.filter(d => {
+      return [
+        'pod', 'replicaset', 'daemonset', 'statefulset', 'deployment', 'cronjob', 'job'
+      ].indexOf(d.kind.toLowerCase().replace(/s$/, '')) > -1
+    }).map(doc => {
+      const spec = doc.spec.template.spec
+      const summary = []
+      let subjectSummary = `A "${doc.metadata.name}" ${doc.kind}, with `
+      const imagesSummary = []
+      const servicesSummary = []
+
+      // - Images
+      // A "redis" Deployment, with 1 replica of “redis/redis”
+      for (let i = 0; i < spec.containers.length; i++) {
+        const container = spec.containers[i]
+        imagesSummary.push(`${doc.spec.replicas} replica of "${container.image}"`)
+
+        // - Services
+        // exposed internally (not to the internet) at the DNS address “redis”
+        if (container.ports) {
+          // Find services that match this container/port
+          docs.filter(d => d.kind.toLowerCase() === 'service')
+        }
+      }
+      subjectSummary += imagesSummary.join(' and ')
+      summary.push(subjectSummary)
+      if (servicesSummary.length > 0) summary.push(servicesSummary)
+
+      // - Volumes
+      // with a 80gb volume "redis-pvc" mounted at /data
+      if (spec.volumes) {
+        const volumesSummary = []
+        for (let i = 0; i < spec.volumes.length; i++) {
+          if (spec.volumes[i].persistentVolumeClaim) {
+            const pvc = docs.find(d => d.kind.toLowerCase() === 'persistentvolumeclaim' && d.metadata.name === spec.volumes[i].persistentVolumeClaim.claimName)
+            spec.containers.map(c => c.volumeMounts && c.volumeMounts.map(v => {
+              if (v.name === spec.volumes[i].name) {
+                volumesSummary.push(`a ${pvc.spec.resources.requests.storage} volume "${pvc.metadata.name}" mounted at ${v.mountPath}`)
+              }
+            }))
+          }
+        }
+        summary.push(`with ${volumesSummary.join(' and ')}`)
+      }
+
+      summaries.push(summary)
+    })
+    return summaries
+  }
 }
 
 module.exports = {

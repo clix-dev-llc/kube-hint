@@ -51,10 +51,6 @@ describe('KubeHint', () => {
         Array.isArray(results.suggestions),
         'Array.isArray(results.suggestions)'
       ).to.equal(true)
-      expect(
-        Array.isArray(results.summary),
-        'Array.isArray(results.summary)'
-      ).to.equal(true)
       expect(results.errors.length, 'results.errors.length').to.equal(0)
       expect(
         results.warnings.length,
@@ -64,18 +60,23 @@ describe('KubeHint', () => {
         results.suggestions.length,
         'results.suggestions.length'
       ).to.be.greaterThan(0)
-      expect(
-        results.summary.length,
-        'results.summary.length'
-      ).to.be.greaterThan(0)
     })
+  })
 
-    it('Summary combines related documents (Deployment + PVC)', () => {
+  describe('.summarizeDocuments()', () => {
+    it('Summarizes deployments', () => {
       const kubeHint = new KubeHint()
       const docs = loadTestDocs('simple-pvc')
-      const results = kubeHint.lint(docs)
-      expect(results.summary.length, 'summaries').to.be.greaterThan(0)
-      console.log(results.summary)
+      const summary = kubeHint.summarizeDocuments(docs)
+      expect(summary.length, 'summary.length').to.be.greaterThan(0)
+    })
+
+    it('Summarizes deployment and services', () => {
+      const kubeHint = new KubeHint()
+      const docs = loadTestDocs('redis')
+      const summary = kubeHint.summarizeDocuments(docs)
+      expect(summary.length, 'summary.length').to.be.greaterThan(0)
+      console.log(summary)
     })
   })
 })
