@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadbalancer-deployment
+spec:
+  selector:
+    matchLabels:
+      app: loadbalancer-deployment
+      tier: service
+  minReadySeconds: 5
+  strategy:
+    # indicate which strategy we want for rolling update
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: loadbalancer-deployment
+        tier: service
+        logs: json
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+      volumes:
+        - name: registry-ssl-volume
+          secret:
+            secretName: registry-secrets
+      terminationGracePeriodSeconds: 15
+      containers:
+        - name: loadbalancer-deployment
+          image: my.private.registry.com/my-api:latest
+          imagePullPolicy: Always
+          ports:
+            - name: https-ports
+              containerPort: 4000
+            - name: metrics
+              containerPort: 5000
+          envFrom:
+            - secretRef:
+                name: api
+          volumeMounts:
+            - name: ssl-volume
+              mountPath: /app/inf/secrets
+            - name: registry-ssl-volume
+              mountPath: /app/inf/registry-secrets
+          resources:
+            requests:
+              cpu: 50m
+              memory: 100Mi
+            limits:
+              cpu: 2
+              memory: 1500Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: https-ports
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: https-ports
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer-deployment
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: https-ports
+  selector:
+    app: loadbalancer-deployment
+    tier: service

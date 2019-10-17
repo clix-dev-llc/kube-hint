@@ -196,13 +196,32 @@ class KubeHint {
           // We have a matching service
           if (services.length > 0) {
             services.map(s => {
+              const ingresses = docs.filter(d => d.kind.toLowerCase() === 'ingress').filter(s => {
+                let matches = false
+                for (const i in s.spec.rules) {
+                  const rule = s.spec.rules[i]
+                  if (rule && rule.http && rule.http.paths.filter(p => p && p.backend && p.backend.serviceName === s.metadata.name)) {
+                    matches = true
+                  }
+                }
+                return matches
+              })
+              const portsStr = `(${s.spec.ports.map(p => p.port).join(', ')})`
+
               if (s.spec.type) {
                 const type = s.spec.type.toLowerCase()
                 if (type === 'nodeport') {
-                  servicesSummary.push('exposed externally via NodePort')
+                  servicesSummary.push(`exposed externally via NodePort ${portsStr}`)
                 } else if (type === 'loadbalancer') {
-                  servicesSummary.push('exposed via LoadBalancer')
+                  servicesSummary.push(`exposed via LoadBalancer ${portsStr}`)
                 }
+              }
+              if (ingresses.length > 0) {
+                const ingressesStr = `(${ingresses.map(i => i.metadata.name).join(', ')})`
+                const noun = ingresses.length > 1 ? 'ingresses' : 'ingress'
+                servicesSummary.push(`exposed externally via ${noun} ${ingressesStr}`)
+              } else {
+                servicesSummary.push(`exposed internally (not to the internet) at the DNS address "${s.metadata.name}" ${portsStr}`)
               }
               // check if associated ingress
             })
@@ -210,8 +229,8 @@ class KubeHint {
         }
       }
       subjectSummary += imagesSummary.join(' and ')
-      summary.push(subjectSummary)
-      if (servicesSummary.length > 0) summary.push(servicesSummary.join('\n'))
+      summary.push([subjectSummary])
+      if (servicesSummary.length > 0) summary.push(servicesSummary)
 
       // - Volumes
       // with a 80gb volume "redis-pvc" mounted at /data
@@ -234,7 +253,7 @@ class KubeHint {
           }
         }
         if (volumesSummary.length > 0) {
-          summary.push(`with ${volumesSummary.join(' and ')}`)
+          summary.push(volumesSummary)
         }
       }
 
