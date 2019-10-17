@@ -78,5 +78,13 @@ describe('KubeHint', () => {
       expect(summary.length, 'summary.length').to.be.greaterThan(0)
       console.log(summary)
     })
+
+    it('Summarizes deployment -> service -> ingress', () => {
+      const kubeHint = new KubeHint()
+      const docs = loadTestDocs('ingress')
+      const summary = kubeHint.summarizeDocuments(docs)
+      expect(summary.length, 'summary.length').to.be.greaterThan(0)
+      console.log(summary)
+    })
   })
 })

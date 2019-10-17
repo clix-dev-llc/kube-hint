@@ -10,9 +10,7 @@ type lintRules = {
 
 class KubeHintResults {
   errors /*: Array<Object> */ = [];
-
   warnings /*: Array<Object> */ = [];
-
   suggestions /*: Array<Object> */ = [];
 
   error = (
@@ -156,17 +154,6 @@ class KubeHint {
           }
         }
 
-        // summarize(docNumber, {
-        //   kind,
-        //   name: doc.metadata.name,
-        //   namespace: doc.metadata.namespace,
-        //   message: `${doc.spec.replicas} ${
-        //     doc.spec.replicas > 1 ? 'replicas' : 'replica'
-        //   } of "${doc.spec.template.spec.containers
-        //     .map(c => c.image)
-        //     .join('", "')}"`
-        // })
-
         return results
       }
     }
@@ -182,7 +169,8 @@ class KubeHint {
     }).map(doc => {
       const spec = doc.spec.template.spec
       const summary = []
-      let subjectSummary = `A "${doc.metadata.name}" ${doc.kind}, with `
+      const article = ['a', 'e', 'i', 'o', 'u'].indexOf(doc.metadata.name[0].toLowerCase()) > -1 ? 'An' : 'A'
+      let subjectSummary = `${article} "${doc.metadata.name}" ${doc.kind}, with `
       const imagesSummary = []
       const servicesSummary = []
 
@@ -190,18 +178,40 @@ class KubeHint {
       // A "redis" Deployment, with 1 replica of “redis/redis”
       for (let i = 0; i < spec.containers.length; i++) {
         const container = spec.containers[i]
-        imagesSummary.push(`${doc.spec.replicas} replica of "${container.image}"`)
+        imagesSummary.push(`${doc.spec.replicas} ${doc.spec.replicas > 1 ? 'replicas' : 'replica'} of "${container.image}"`)
 
         // - Services
         // exposed internally (not to the internet) at the DNS address “redis”
         if (container.ports) {
           // Find services that match this container/port
-          docs.filter(d => d.kind.toLowerCase() === 'service')
+          const services = docs.filter(d => d.kind.toLowerCase() === 'service').filter(s => {
+            let matches = true
+            for (const selector in s.spec.selector) {
+              if (doc.spec.template.metadata.labels[selector] !== s.spec.selector[selector]) {
+                matches = false
+              }
+            }
+            return matches
+          })
+          // We have a matching service
+          if (services.length > 0) {
+            services.map(s => {
+              if (s.spec.type) {
+                const type = s.spec.type.toLowerCase()
+                if (type === 'nodeport') {
+                  servicesSummary.push('exposed externally via NodePort')
+                } else if (type === 'loadbalancer') {
+                  servicesSummary.push('exposed via LoadBalancer')
+                }
+              }
+              // check if associated ingress
+            })
+          }
         }
       }
       subjectSummary += imagesSummary.join(' and ')
       summary.push(subjectSummary)
-      if (servicesSummary.length > 0) summary.push(servicesSummary)
+      if (servicesSummary.length > 0) summary.push(servicesSummary.join('\n'))
 
       // - Volumes
       // with a 80gb volume "redis-pvc" mounted at /data
@@ -215,9 +225,17 @@ class KubeHint {
                 volumesSummary.push(`a ${pvc.spec.resources.requests.storage} volume "${pvc.metadata.name}" mounted at ${v.mountPath}`)
               }
             }))
+          } else if (spec.volumes[i].secret) {
+            spec.containers.map(c => c.volumeMounts && c.volumeMounts.map(v => {
+              if (v.name === spec.volumes[i].name) {
+                volumesSummary.push(`a volume from the secret "${v.name}" mounted at ${v.mountPath}`)
+              }
+            }))
           }
         }
-        summary.push(`with ${volumesSummary.join(' and ')}`)
+        if (volumesSummary.length > 0) {
+          summary.push(`with ${volumesSummary.join(' and ')}`)
+        }
       }
 
       summaries.push(summary)
